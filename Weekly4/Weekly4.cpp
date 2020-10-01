@@ -325,7 +325,7 @@ void task4() {
                 }
             }
 
-            sort(inHand.begin(), inHand.end());
+            sort(inHand.begin(), inHand.end());             //Sort the hand so finding pairs is easy.
             for (int i = 0; i < inHand.size(); i++)         //Find pairs!
             {
                 if (i >= 1 && inHand.at(i) == inHand.at(i - 1)) {
