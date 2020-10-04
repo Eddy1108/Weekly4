@@ -12,7 +12,6 @@
 int choice{ 0 };
 
 //task 1 variables
-std::string sentence = " ";
 char letter = ' ';
 
 //task 2 variables
@@ -36,15 +35,15 @@ struct objects {
 };
 
 char pInput = ' ';
-int currentY{ 5 };
-int currentX{ 5 };
+int currentY{ 1 };
+int currentX{ 1 };
 int lastY{ 0 };
 int lastX{ 0 };
 int direction{ 0 };     //0, didnt move //1, Moved Up // 2, Moved Right // 3, Moved Down //4, Moved Left //enum?
 
 //task 3 variables
 struct people {
-    std::string name;
+    std::string name{};
     long int number;
 };
 
@@ -54,24 +53,24 @@ int temp{ 0 };
 //task 4 variables
 char hold = ' ';
 int diceNr{ 0 };
-int sixes{ 0 };
-int pairs{ 0 };
-bool handFull = false;
+bool diceFinished = false;
+
+char lowerToUpper(char l) {
+    return l - 32;
+}
 
 void task1() 
 {
+    std::vector<char> sentence{};
+
     system("cls");
 
-    std::cout << "Make a sentence of lower letter characters to upper case characters. \nPlease type a sentence: ";
-    std::cin.ignore();
-    std::getline(std::cin, sentence);
+    std::cout << "Please type a lowercase letter to convert: ";
+    letter = _getch();
+    std::cout << letter;
 
-    for (int i = 0; i <= sentence.size()-1; i++)
-    {
-        letter = sentence[i] - 32;
-        std::cout << letter;
-    }
-    std::cout << "\n";
+    std::cout << "\nConverted: " << lowerToUpper(letter) << std::endl;
+
     system("pause");
 }
 
@@ -108,6 +107,8 @@ void task2()
     objects forward{ '/', 7, 7};
     objects backwards{ '\\', 3, 3 };
     objects exit{ 'G', 9, 9 };
+    currentX = 1;
+    currentY = 1;
 
     while (true) {
         system("cls");
@@ -119,8 +120,8 @@ void task2()
         board[exit.forPosX][exit.forPosY] = exit.icon;
         
         printBoard();
-        std::cout << "BOARD PRINTED\n" << "Current: " << currentY << " " << currentX;
-        std::cout << "\nLast: " << lastY << " " << lastX;
+        //std::cout << "BOARD PRINTED\n" << "Current: " << currentY << " " << currentX;
+        //std::cout << "\nLast: " << lastY << " " << lastX;
         pInput = _getch();
 
         switch (pInput) {
@@ -203,8 +204,7 @@ void task3() {
         std::cout << "Saving info for person " << i << "...";
         std::cout << "\nName: ";
         std::cin.ignore();
-        std::getline(std::cin, n1[i-1].name);
-
+        std::getline(std::cin, n1[i - 1].name);
         std::cout << "Number: ";
         std::cin >> n1[i-1].number;
         
@@ -231,38 +231,68 @@ void task3() {
     }
 }
 
+int findSixes(std::vector<int> array) {
+    int sixes{ 0 };
+    for (int i = 0; i < array.size(); i++)
+    {
+        if (array.at(i) == 6) {
+            sixes++;
+        }
+    }
+    return sixes;
+}
+
+int findPairs(std::vector<int> array) {
+    int pairs{ 0 };
+    sort(array.begin(), array.end());             //Sort the hand so finding pairs is easy.
+    for (int i = 0; i < array.size(); i++)         //Find pairs!
+    {
+        if (i >= 1 && array.at(i) == array.at(i - 1)) {
+            pairs++;
+            i++;
+        }
+    }
+    return pairs;
+}
+
+void rollDice(std::vector<int> &array) 
+{
+    for (int i = 0; i < array.size(); i++)
+    {
+    array.at(i) = std::rand() % 6 + 1;
+    std::cout << array.at(i) << " ";
+    }
+}
+
 void task4() {
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
-    hold = ' ';
+    diceFinished = false;
     std::vector<int> inPlay(5);
     std::vector<int> inHand{};
     while (true) 
     {
-        system("cls");
-        while (hold != 'h')         //Roll random numbers until the player presses H
+        hold = 'r';
+        do        //Roll random numbers until the player presses H
         {
-            for (int i = 0; i < inPlay.size(); i++)
-            {
-                inPlay.at(i) = std::rand() % 6 + 1;
-                std::cout << inPlay.at(i) << " ";
+            system("cls");
+            if (hold == 'r' || hold == 'R') {
+                rollDice(inPlay);
+                hold = ' ';
             }
 
-            std::cout << "--Press 'H' to stop rollig!--\n";
+            std::cout << "\n--Press 'H' to choose what to keep-- \n--Press 'R' to reroll Dice--";
+            hold = _getch();
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
-
-            if (_kbhit()) {
-                hold = _getch();
-            }
-        }
+        } while (hold != 'h');
         
         while (true)       //Hold menu
         {
+            hold = ' ';
             system("cls");
 
             for (int i = 1; i < inPlay.size() + 1; i++)     //Print the dice in play
             {
-                std::cout << "Dice " << i << ": " << inPlay.at(i - 1) << "\n";
+                std::cout << "Dice [" << i << "]: " << inPlay.at(i - 1) << "\n";
             }
 
             std::cout << "\nDice in hand : ";
@@ -271,10 +301,15 @@ void task4() {
                 std::cout << inHand.at(i) << ", ";
             }
 
-            std::cout << "\n\nPress 'R' to reroll, or type the dice number you wish to keep: ";
+            std::cout << "\n\n--Press 'R' to reroll-- \n--Press 'H' again to Finish-- \n--Type the dice [number] you wish to keep--\n";
             hold = _getch();
 
             if (hold == 'r' || hold == 'R') {           //Exit the hold menu, and return to rolling.
+                break;
+            }
+
+            if (hold == 'h' || hold == 'H') {           //Press H again and the game ends
+                diceFinished = true;
                 break;
             }
 
@@ -304,39 +339,20 @@ void task4() {
                 inPlay.erase(inPlay.begin() + 4);
                 break;
             }
-
-            if (inPlay.size() == 0) {
-                handFull = true;
-                break;
-            }
-
         }
 
-        if (handFull == true) 
+        if (diceFinished == true) 
         {
             system("cls");
-            std::cout << "Your hand is full! \nYour hand: ";
-            
+            std::cout << "The game is over! \nDice you kept: ";
             for (int i = 0; i < inHand.size(); i++)
             {
                 std::cout << inHand.at(i) << " ";
-                if (inHand.at(i) == 6) {
-                    sixes++;
-                }
             }
 
-            sort(inHand.begin(), inHand.end());             //Sort the hand so finding pairs is easy.
-            for (int i = 0; i < inHand.size(); i++)         //Find pairs!
-            {
-                if (i >= 1 && inHand.at(i) == inHand.at(i - 1)) {
-                    pairs++;
-                    i++;
-                }
-            }
+            std::cout << "\nYou have " << findPairs(inHand) << " pair(s) in your hand.";
 
-            std::cout << "\nYou have " << pairs << " pair(s) in your hand.";
-
-            std::cout << "\nDice with 6 in your hand: " << sixes << "\n";
+            std::cout << "\nDice with 6 in your hand: " << findSixes(inHand) << "\n";
             system("pause");
             break;
         }
@@ -348,7 +364,7 @@ int main()
     while (true) {
         //Print Menu
         system("cls");
-        std::cout << "There are 4 tasks in this program, \nPlease choose a task: \n[1]: Lowercase to Uppercase \n[2]: 10x10 board w/player \n[3]: Save Names & Numbers \n[4]: Roll Dice\n";
+        std::cout << "There are 4 tasks in this program, \nPlease choose a task: \n[1]: Lowercase to Uppercase \n[2]: 10x10 board w/player \n[3]: Save Names & Numbers \n[4]: Roll Dice \n\n[0]Exit \n";
         std::cin >> choice;
 
         switch (choice) {
@@ -364,7 +380,9 @@ int main()
         case 4:
             task4();
             break;
+        case 0:
+            exit(0);
+            break;
         }
     }
 }
-
